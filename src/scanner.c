@@ -1,6 +1,8 @@
 #include "tree_sitter/array.h"
 #include "tree_sitter/parser.h"
+#include "tree_sitter/alloc.h"
 
+#include <wctype.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -12,9 +14,10 @@ enum TokenType {
     DEDENT,
     STRING_START,
     STRING_CONTENT,
+    LINE_COMMENT,
+    BLOCK_COMMENT_CONTENT,
     ESCAPE_INTERPOLATION,
     STRING_END,
-    COMMENT,
     CLOSE_PAREN,
     CLOSE_BRACKET,
     CLOSE_BRACE,
@@ -92,13 +95,85 @@ static inline void advance(TSLexer *lexer) { lexer->advance(lexer, false); }
 
 static inline void skip(TSLexer *lexer) { lexer->advance(lexer, true); }
 
-bool tree_sitter_python_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
+typedef enum {
+    LeftForwardSlash,
+    LeftAsterisk,
+    Continuing,
+} BlockCommentState;
+
+typedef struct {
+    BlockCommentState state;
+    unsigned nestingDepth;
+} BlockCommentProcessing;
+
+static inline void process_left_forward_slash(BlockCommentProcessing *processing, char current) {
+    if (current == '*') {
+        processing->nestingDepth += 1;
+    }
+    processing->state = Continuing;
+};
+
+static inline void process_left_asterisk(BlockCommentProcessing *processing, char current, TSLexer *lexer) {
+    if (current == '*') {
+        lexer->mark_end(lexer);
+        processing->state = LeftAsterisk;
+        return;
+    }
+
+    if (current == '/') {
+        processing->nestingDepth -= 1;
+    }
+
+    processing->state = Continuing;
+}
+
+static inline void process_continuing(BlockCommentProcessing *processing, char current) {
+    switch (current) {
+        case '/':
+            processing->state = LeftForwardSlash;
+            break;
+        case '*':
+            processing->state = LeftAsterisk;
+            break;
+    }
+}
+
+static inline bool process_block_comment(TSLexer *lexer, const bool *valid_symbols) {
+    if (valid_symbols[BLOCK_COMMENT_CONTENT]) {
+        advance(lexer);
+        char first = (char)lexer->lookahead;
+        bool has_asterisk;
+        // Manually set the current state based on the first character
+        while (!lexer->eof(lexer)) {
+            has_asterisk = (first == '*');
+            advance(lexer);
+            first = (char)lexer->lookahead;
+            if (first == '/' && has_asterisk) {
+                lexer->mark_end(lexer);
+            }
+        }
+        lexer->result_symbol = BLOCK_COMMENT_CONTENT;
+        return true;
+    }
+    return false;
+}
+
+bool tree_sitter_lobster_external_scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
     Scanner *scanner = (Scanner *)payload;
 
     bool error_recovery_mode = valid_symbols[STRING_CONTENT] && valid_symbols[INDENT];
     bool within_brackets = valid_symbols[CLOSE_BRACE] || valid_symbols[CLOSE_PAREN] || valid_symbols[CLOSE_BRACKET];
 
     bool advanced_once = false;
+
+    if (valid_symbols[BLOCK_COMMENT_CONTENT]) {
+        if(process_block_comment(lexer, valid_symbols)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     if (valid_symbols[ESCAPE_INTERPOLATION] && scanner->delimiters.size > 0 &&
         (lexer->lookahead == '{' || lexer->lookahead == '}') && !error_recovery_mode) {
         Delimiter *delimiter = array_back(&scanner->delimiters);
@@ -152,7 +227,7 @@ bool tree_sitter_python_external_scanner_scan(void *payload, TSLexer *lexer, con
                     if (lexer->lookahead == 'N' || lexer->lookahead == 'u' || lexer->lookahead == 'U') {
                         // In bytes string, \N{...}, \uXXXX and \UXXXXXXXX are
                         // not escape sequences
-                        // https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals
+                        // https://docs.lobster.org/3/reference/lexical_analysis.html#string-and-bytes-literals
                         advance(lexer);
                     } else {
                         lexer->result_symbol = STRING_CONTENT;
@@ -360,7 +435,7 @@ bool tree_sitter_python_external_scanner_scan(void *payload, TSLexer *lexer, con
     return false;
 }
 
-unsigned tree_sitter_python_external_scanner_serialize(void *payload, char *buffer) {
+unsigned tree_sitter_lobster_external_scanner_serialize(void *payload, char *buffer) {
     Scanner *scanner = (Scanner *)payload;
 
     size_t size = 0;
@@ -386,7 +461,7 @@ unsigned tree_sitter_python_external_scanner_serialize(void *payload, char *buff
     return size;
 }
 
-void tree_sitter_python_external_scanner_deserialize(void *payload, const char *buffer, unsigned length) {
+void tree_sitter_lobster_external_scanner_deserialize(void *payload, const char *buffer, unsigned length) {
     Scanner *scanner = (Scanner *)payload;
 
     array_delete(&scanner->delimiters);
@@ -412,7 +487,7 @@ void tree_sitter_python_external_scanner_deserialize(void *payload, const char *
     }
 }
 
-void *tree_sitter_python_external_scanner_create() {
+void *tree_sitter_lobster_external_scanner_create() {
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
     _Static_assert(sizeof(Delimiter) == sizeof(char), "");
 #else
@@ -421,11 +496,11 @@ void *tree_sitter_python_external_scanner_create() {
     Scanner *scanner = calloc(1, sizeof(Scanner));
     array_init(&scanner->indents);
     array_init(&scanner->delimiters);
-    tree_sitter_python_external_scanner_deserialize(scanner, NULL, 0);
+    tree_sitter_lobster_external_scanner_deserialize(scanner, NULL, 0);
     return scanner;
 }
 
-void tree_sitter_python_external_scanner_destroy(void *payload) {
+void tree_sitter_lobster_external_scanner_destroy(void *payload) {
     Scanner *scanner = (Scanner *)payload;
     array_delete(&scanner->indents);
     array_delete(&scanner->delimiters);

@@ -1,9 +1,9 @@
 /**
- * @file Python grammar for tree-sitter
+ * @file Lobster grammar for tree-sitter
  * @author Max Brunsfeld <maxbrunsfeld@gmail.com>
  * @license MIT
- * @see {@link https://docs.python.org/2/reference/grammar.html|Python 2 grammar}
- * @see {@link https://docs.python.org/3/reference/grammar.html|Python 3 grammar}
+ * @see {@link https://docs.lobster.org/2/reference/grammar.html|Lobster 2 grammar}
+ * @see {@link https://docs.lobster.org/3/reference/grammar.html|Lobster 3 grammar}
  */
 
 /* eslint-disable arrow-parens */
@@ -39,7 +39,7 @@ const PREC = {
 const SEMICOLON = ';';
 
 module.exports = grammar({
-  name: 'python',
+  name: 'lobster',
 
   extras: $ => [
     $.comment,
@@ -67,21 +67,21 @@ module.exports = grammar({
     $.parameter,
   ],
 
-  externals: $ => [
+   externals: $ => [
     $._newline,
     $._indent,
     $._dedent,
     $.string_start,
     $._string_content,
-    $.escape_interpolation,
-    $.string_end,
-
     // Mark comments as external tokens so that the external scanner is always
     // invoked, even if no external token is expected. This allows for better
     // error recovery, because the external scanner can maintain the overall
     // structure by returning dedent tokens whenever a dedent occurs, even
     // if no dedent is expected.
-    $.comment,
+    $.line_comment,
+    $._block_comment_content,
+    $.escape_interpolation,
+    $.string_end,
 
     // Allow the external scanner to check for the validity of closing brackets
     // so that it can avoid returning dedent tokens between brackets.
@@ -1178,18 +1178,20 @@ module.exports = grammar({
       alias('type', $.identifier),
     ),
 
-    true: _ => 'True',
-    false: _ => 'False',
-    none: _ => 'None',
+    true: _ => 'true',
+    false: _ => 'false',
+    none: _ => 'nil',
 
     await: $ => prec(PREC.unary, seq(
       'await',
       $.primary_expression,
     )),
 
-    comment: _ => token(seq('#', /.*/)),
-
     line_continuation: _ => token(seq('\\', choice(seq(optional('\r'), '\n'), '\0'))),
+    comment: $ => choice(
+       token(seq('//', /.*/u, /[\n\r\u2028]/)),
+       seq(token(prec(1, "/*")), $._block_comment_content, '/'), 
+    ),
 
     positional_separator: _ => '/',
     keyword_separator: _ => '*',

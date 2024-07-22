@@ -783,7 +783,6 @@ module.exports = grammar({
         [prec.left, '@', PREC.times],
         [prec.left, '/', PREC.times],
         [prec.left, '%', PREC.times],
-        [prec.left, '//', PREC.times],
         [prec.right, '**', PREC.power],
         [prec.left, '|', PREC.bitwise_or],
         [prec.left, '&', PREC.bitwise_and],
@@ -853,7 +852,7 @@ module.exports = grammar({
     augmented_assignment: $ => seq(
       field('left', $._left_hand_side),
       field('operator', choice(
-        '+=', '-=', '*=', '/=', '@=', '//=', '%=', '**=',
+        '+=', '-=', '*=', '/=', '@=', '%=', '**=',
         '>>=', '<<=', '&=', '^=', '|=',
       )),
       field('right', $._right_hand_side),
@@ -1190,7 +1189,7 @@ module.exports = grammar({
     line_continuation: _ => token(seq('\\', choice(seq(optional('\r'), '\n'), '\0'))),
     comment: $ => choice(
        token(seq('//', /.*/u, /[\n\r\u2028]/)),
-       seq(token(prec(1, "/*")), $._block_comment_content, '/'), 
+       prec.left(seq('/*', $._block_comment_content, /\//)), 
     ),
 
     positional_separator: _ => '/',

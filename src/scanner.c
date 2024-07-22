@@ -140,16 +140,21 @@ static inline void process_continuing(BlockCommentProcessing *processing, char c
 
 static inline bool process_block_comment(TSLexer *lexer, const bool *valid_symbols) {
     if (valid_symbols[BLOCK_COMMENT_CONTENT]) {
-        advance(lexer);
         char first = (char)lexer->lookahead;
-        bool has_asterisk;
+        bool has_asterisk = false;
+        bool has_fw_slash = false;
         // Manually set the current state based on the first character
         while (!lexer->eof(lexer)) {
             has_asterisk = (first == '*');
+            if (has_fw_slash && has_asterisk) {
+                return false;
+            }
             advance(lexer);
             first = (char)lexer->lookahead;
-            if (first == '/' && has_asterisk) {
+            has_fw_slash = (first == '/');
+            if (has_fw_slash && has_asterisk) {
                 lexer->mark_end(lexer);
+                break;
             }
         }
         lexer->result_symbol = BLOCK_COMMENT_CONTENT;
@@ -169,9 +174,10 @@ bool tree_sitter_lobster_external_scanner_scan(void *payload, TSLexer *lexer, co
     if (valid_symbols[BLOCK_COMMENT_CONTENT]) {
         if(process_block_comment(lexer, valid_symbols)) {
             return true;
-        } else {
+        }/* else {
             return false;
-        }
+        }*/
+        advanced_once = true;
     }
 
     if (valid_symbols[ESCAPE_INTERPOLATION] && scanner->delimiters.size > 0 &&

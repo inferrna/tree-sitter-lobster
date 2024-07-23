@@ -9,32 +9,32 @@ from wheel.bdist_wheel import bdist_wheel
 class Build(build):
     def run(self):
         if isdir("queries"):
-            dest = join(self.build_lib, "tree_sitter_python", "queries")
+            dest = join(self.build_lib, "tree_sitter_lobster", "queries")
             self.copy_tree("queries", dest)
         super().run()
 
 
 class BdistWheel(bdist_wheel):
     def get_tag(self):
-        python, abi, platform = super().get_tag()
-        if python.startswith("cp"):
-            python, abi = "cp38", "abi3"
-        return python, abi, platform
+        lobster, abi, platform = super().get_tag()
+        if lobster.startswith("cp"):
+            lobster, abi = "cp38", "abi3"
+        return lobster, abi, platform
 
 
 setup(
-    packages=find_packages("bindings/python"),
-    package_dir={"": "bindings/python"},
+    packages=find_packages("bindings/lobster"),
+    package_dir={"": "bindings/lobster"},
     package_data={
-        "tree_sitter_python": ["*.pyi", "py.typed"],
-        "tree_sitter_python.queries": ["*.scm"],
+        "tree_sitter_lobster": ["*.pyi", "py.typed"],
+        "tree_sitter_lobster.queries": ["*.scm"],
     },
-    ext_package="tree_sitter_python",
+    ext_package="tree_sitter_lobster",
     ext_modules=[
         Extension(
             name="_binding",
             sources=[
-                "bindings/python/tree_sitter_python/binding.c",
+                "bindings/lobster/tree_sitter_lobster/binding.c",
                 "src/parser.c",
                 "src/scanner.c",
             ],

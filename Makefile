@@ -1,6 +1,6 @@
 VERSION := 0.21.0
 
-LANGUAGE_NAME := tree-sitter-python
+LANGUAGE_NAME := tree-sitter-lobster
 
 # repository
 SRC_DIR := src

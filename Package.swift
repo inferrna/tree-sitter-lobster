@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "TreeSitterPython",
+    name: "TreeSitterLobster",
     platforms: [.macOS(.v10_13), .iOS(.v11)],
     products: [
-        .library(name: "TreeSitterPython", targets: ["TreeSitterPython"]),
+        .library(name: "TreeSitterLobster", targets: ["TreeSitterLobster"]),
     ],
     dependencies: [],
     targets: [
-        .target(name: "TreeSitterPython",
+        .target(name: "TreeSitterLobster",
                 path: ".",
                 exclude: [
                     "Cargo.toml",
@@ -18,7 +18,7 @@ let package = Package(
                     "bindings/c",
                     "bindings/go",
                     "bindings/node",
-                    "bindings/python",
+                    "bindings/lobster",
                     "bindings/rust",
                     "examples",
                     "grammar.js",

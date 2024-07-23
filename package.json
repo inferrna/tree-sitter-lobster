@@ -1,8 +1,8 @@
 {
-  "name": "tree-sitter-python",
+  "name": "tree-sitter-lobster",
   "version": "0.21.0",
-  "description": "Python grammar for tree-sitter",
-  "repository": "github:tree-sitter/tree-sitter-python",
+  "description": "Lobster grammar for tree-sitter",
+  "repository": "github:tree-sitter/tree-sitter-lobster",
   "license": "MIT",
   "author": "Max Brunsfeld",
   "contributors": [
@@ -22,20 +22,20 @@
     "incremental",
     "parsing",
     "tree-sitter",
-    "python"
+    "lobster"
   ],
   "dependencies": {
-    "node-addon-api": "^7.1.0",
+    "node-addon-api": "^8.0.0",
     "node-gyp-build": "^4.8.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
     "eslint-config-google": "^0.14.0",
-    "tree-sitter-cli": "^0.21.0",
+    "tree-sitter-cli": "^0.22.6",
     "prebuildify": "^6.0.0"
   },
   "peerDependencies": {
-    "tree-sitter": "^0.21.0"
+    "tree-sitter": "^0.21.1"
   },
   "peerDependenciesMeta": {
     "tree_sitter": {
@@ -52,11 +52,11 @@
   },
   "tree-sitter": [
     {
-      "scope": "source.python",
+      "scope": "source.lobster",
       "file-types": [
-        "py"
+        "lobster"
       ],
-      "injection-regex": "py",
+      "injection-regex": "lobster",
       "highlights": "queries/highlights.scm",
       "tags": "queries/tags.scm"
     }

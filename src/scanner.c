@@ -233,7 +233,7 @@ bool tree_sitter_lobster_external_scanner_scan(void *payload, TSLexer *lexer, co
                     if (lexer->lookahead == 'N' || lexer->lookahead == 'u' || lexer->lookahead == 'U') {
                         // In bytes string, \N{...}, \uXXXX and \UXXXXXXXX are
                         // not escape sequences
-                        // https://docs.lobster.org/3/reference/lexical_analysis.html#string-and-bytes-literals
+                        // https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals
                         advance(lexer);
                     } else {
                         lexer->result_symbol = STRING_CONTENT;

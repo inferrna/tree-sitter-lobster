@@ -2,8 +2,7 @@
  * @file Lobster grammar for tree-sitter
  * @author Max Brunsfeld <maxbrunsfeld@gmail.com>
  * @license MIT
- * @see {@link https://docs.lobster.org/2/reference/grammar.html|Lobster 2 grammar}
- * @see {@link https://docs.lobster.org/3/reference/grammar.html|Lobster 3 grammar}
+ * @see {@link http://aardappel.github.io/lobster/language_reference.html|Lobster grammar}
  */
 
 /* eslint-disable arrow-parens */

@@ -123,6 +123,8 @@ module.exports = grammar({
       $.import_from_statement,
       $.print_statement,
       $.assert_statement,
+      $.let_declaration,
+      $.var_declaration,
       $.expression_statement,
       $.return_statement,
       $.delete_statement,
@@ -839,6 +841,9 @@ module.exports = grammar({
       field('body', $._expression_within_for_in_clause),
     ),
 
+    let_declaration: $ => seq('let', $.assignment),
+    var_declaration: $ => seq('var', $.assignment),
+
     assignment: $ => seq(
       field('left', $._left_hand_side),
       choice(
@@ -1169,6 +1174,8 @@ module.exports = grammar({
           'exec',
           'async',
           'await',
+          'let',
+          'var',
           'match',
         ),
         $.identifier,

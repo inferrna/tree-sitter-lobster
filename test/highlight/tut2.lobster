@@ -26,3 +26,5 @@ while gl.frame() and gl.button("escape") != 1:
     gl.scale(gl.window_size().y / worldsize)
     //Рисуем кружок
     gl.circle(1.0, 6)
+    gl.sgdsp()
+    let x = 7
